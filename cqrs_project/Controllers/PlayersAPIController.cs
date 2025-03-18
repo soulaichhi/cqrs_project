@@ -1,5 +1,7 @@
 ﻿using cqrs_project.Data;
+using cqrs_project.Features.Players.CreatePlayer;
 using cqrs_project.Models;
+using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -11,16 +13,18 @@ namespace cqrs_project.Controllers
     public class PlayersAPIController : ControllerBase
     {
         private readonly AppDbContext _db;
-        public PlayersAPIController(AppDbContext db)
+        private readonly ISender _sender;
+        public PlayersAPIController(AppDbContext db, ISender sender)
         {
             _db = db;
+            _sender = sender;
         }
 
         [HttpPost]
-        public async Task<ActionResult<int>> CreatePlayer(Player player) {
-            _db.Players.Add(player);
-            await _db.SaveChangesAsync();
-            return Ok(player.Id);
+        public async Task<ActionResult<int>> CreatePlayer(CreatePlayerCommand command) {
+            var playerId = await _sender.Send(command);
+      
+            return Ok(playerId);
         }
     }
 }
